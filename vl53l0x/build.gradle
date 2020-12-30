@@ -1,0 +1,11 @@
+apply plugin: 'java'
+apply plugin: 'edu.wpi.first.GradleRIO'
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+// Defining my dependencies. In this case, WPILib (+ friends), CTRE Toolsuite (Talon SRX) and NavX.
+dependencies {
+    implementation 'edu.wpi.first:GradleRIO:2020.3.2'
+    implementation wpi.deps.wpilib()
+}

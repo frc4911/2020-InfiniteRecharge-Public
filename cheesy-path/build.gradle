@@ -1,0 +1,45 @@
+// buildscript {
+//     repositories {
+//         //  mavenCentral()
+//         // mavenLocal()
+//          jcenter()
+//     }
+//     dependencies {
+//         classpath 'com.bmuschko:gradle-tomcat-plugin:2.5'
+//     }
+// }
+
+plugins {
+    id 'war'
+    id "com.bmuschko.tomcat" version "2.5"    
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+}
+
+//apply plugin: 'edu.wpi.first.GradleRIO'
+apply plugin: 'war'
+apply plugin: 'com.bmuschko.tomcat'
+
+// Defining my dependencies. In this case, WPILib (+ friends), CTRE Toolsuite (Talon SRX) and NavX.
+dependencies {
+    //compile project(':cheesylib')
+
+    def tomcatVersion = '7.0.76'
+    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
+            "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"
+    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}") {
+        exclude group: 'org.eclipse.jdt.core.compiler', module: 'ecj'
+    }
+
+    providedCompile 'org.springframework:spring-webmvc:4.3.0.RELEASE'
+    providedCompile 'javax.servlet:javax.servlet-api:3.0.1'
+    providedCompile 'javax.servlet:jstl:1.2'
+}
+
+// context where tomcat is deployed, by default localhost:8080/
+tomcatRun.contextPath = '/'
+tomcatRunWar.contextPath = '/'

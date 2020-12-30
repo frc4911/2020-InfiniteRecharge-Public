@@ -1,0 +1,129 @@
+plugins {
+    id "java"
+	id "idea"
+    id "edu.wpi.first.GradleRIO" version "2020.3.2"
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
+subprojects {
+    version = '2020.1.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+def ROBOT_MAIN_CLASS = "frc.robot.Main"
+
+// Define my targets (RoboRIO) and artifacts (deployable files)
+// This is added by GradleRIO's backing project EmbeddedTools.
+deploy {
+    targets {
+        roboRIO("roborio") {
+            // Team number is loaded either from the .wpilib/wpilib_preferences.json
+            // or from command line. If not found an exception will be thrown.
+            // You can use getTeamOrDefault(team) instead of getTeamNumber if you
+            // want to store a team number in this file.
+            team = frc.getTeamNumber()
+        }
+    }
+    artifacts {
+        frcJavaArtifact('frcJava') {
+            targets << "roborio"
+            // Debug can be overridden by command line, for use with VSCode
+            debug = frc.getDebugOrDefault(false)
+        }
+        // Built in artifact to deploy arbitrary files to the roboRIO.
+        fileTreeArtifact('frcStaticFileDeploy') {
+            // The directory below is the local directory to deploy
+            files = fileTree(dir: 'src/main/deploy')
+            // Deploy to RoboRIO target, into /home/lvuser/deploy
+            targets << "roborio"
+            directory = '/home/lvuser/deploy'
+        }
+    }
+}
+
+wpi.deps.vendor.loadFrom(project(':cheesylib'))
+
+// Set this to true to enable desktop support.
+def includeDesktopSupport = false
+
+// Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
+// Also defines JUnit 4.
+dependencies {
+    implementation project(':cheesylib')
+    implementation project(':madtownlib')
+    implementation project(':cyberlib')
+    implementation project(':as7262')
+
+    implementation wpi.deps.wpilib()
+    nativeZip wpi.deps.wpilibJni(wpi.platforms.roborio)
+    nativeDesktopZip wpi.deps.wpilibJni(wpi.platforms.desktop)
+
+    implementation wpi.deps.vendor.java()
+    nativeZip wpi.deps.vendor.jni(wpi.platforms.roborio)
+    nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
+
+//    testImplementation 'junit:junit:4.12'
+//    implementation("gov.nist.math:jama:1.0.3")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.0.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.0.3")
+
+    // Enable simulation gui support. Must check the box in vscode to enable support
+    // upon debugging
+    simulation wpi.deps.sim.gui(wpi.platforms.desktop, false)
+}
+
+
+// Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
+// in order to make them all available at runtime. Also adding the manifest so WPILib
+// knows where to look for our Robot Class.
+jar {
+    duplicatesStrategy = 'exclude'
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
+    manifest {
+        attributes(
+            'Built-By'       : System.properties['user.name'],
+            'Build-Machine'  : System.getenv("COMPUTERNAME"),
+            'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            'Created-By'     : "Gradle ${gradle.gradleVersion}",
+            'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+            'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+        )
+    }
+}
+
+task versionTxt()  {
+    doLast {
+        mkdir "$projectDir/src/main/deploy/"
+        file("$projectDir/src/main/deploy/build.txt").text = """
+Built-By       : ${System.properties['user.name']}
+Build-Machine  : ${System.getenv("COMPUTERNAME")}
+Build-Timestamp: ${new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date())}
+Created-By     : Gradle ${gradle.gradleVersion}
+Build-Jdk      : ${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})
+Build-OS       : ${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}
+"""
+    }
+}
+
+compileJava{
+    dependsOn versionTxt
+}
+
+wrapper {
+  gradleVersion = '6.0.1'
+}
