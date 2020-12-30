@@ -33,11 +33,6 @@ We break our code up into robot code and libraries.
 * [as7262](as7262) Driver for the Adafruit as726x 6 channel color sensor.
 * [vl53l0x](vl53l0x) Driver for the STMicroelectronics VL53L0X time of flight laser-ranging sensor.
 
-## Robots: [robot-2020](src), [proto](proto),
-These are robot projects. The code in these projects should be specific to the robot and it's mechanisms.  Robots are developed using using `cheeylib`, `madownlib`, and sensors as needed. Typically constants and subsystems will vary.  It's possible autos could be shared and we'll look at this later.
-
-All robots depend on `cheesylib`.
-
 ## [cheesylib](cheesylib)
 cheesylib is code that is shared between all robots. It was written by Team 254  Cheesey Poofs from season 2018-2019.  
 It also includes additional rotation and translation support needed for sverve drive modules courtesy of Team 1323 MadTown Robotics.
